@@ -54,6 +54,28 @@ async function run() {
       );
       res.json(result);
     });
+
+    // give comment
+    app.put("/posts/comment", async (req, res) => {
+      const newPost = req.body;
+      const filter = { _id: ObjectId(newPost._id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $push: {
+          comments: {
+            comment: newPost.comment,
+            userName: newPost.userName,
+            userEmail: newPost.userEmail,
+          },
+        },
+      };
+      const result = await postsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.json(result);
+    });
   } finally {
   }
 }
