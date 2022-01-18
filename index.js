@@ -85,18 +85,25 @@ async function run() {
       res.json(result);
     });
 
-    // get all user
-    app.get("/user/register", async (req, res) => {
-      const result = await usersCollection.find({}).toArray();
-      res.json(result);
-    });
-
     // get a single user
     app.get("/user/register", async (req, res) => {
       const id = req.query.id;
-      const result = await usersCollection
-        .findOne({ _id: ObjectId(id) })
-        .toArray();
+      const result = await usersCollection.findOne({ _id: ObjectId(id) });
+
+      res.json(result);
+    });
+
+    // check if the user is registered
+    app.get("/user/login", async (req, res) => {
+      const email = req.query.email;
+      const password = req.query.password;
+      const result = await usersCollection.findOne({ email, password });
+      res.json(result);
+    });
+
+    // get all user
+    app.get("/users/register", async (req, res) => {
+      const result = await usersCollection.find({}).toArray();
       res.json(result);
     });
   } finally {
