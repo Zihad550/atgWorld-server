@@ -94,7 +94,9 @@ async function run() {
     // get a single user
     app.get("/user/register", async (req, res) => {
       const id = req.query.id;
-      const result = await usersCollection.findOne({ _id: ObjectId(id) });
+      const result = await usersCollection
+        .findOne({ _id: ObjectId(id) })
+        .toArray();
       res.json(result);
     });
   } finally {
