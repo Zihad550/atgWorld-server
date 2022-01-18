@@ -20,6 +20,7 @@ async function run() {
     const database = client.db("atgWorld");
 
     const postsCollection = database.collection("posts");
+    const usersCollection = database.collection("users");
 
     // get all posts
     app.get("/posts", async (req, res) => {
@@ -74,6 +75,19 @@ async function run() {
         updateDoc,
         options
       );
+      res.json(result);
+    });
+
+    // save user
+    app.post("/user/register", async (req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.json(result);
+    });
+
+    // get user
+    app.get("/user/register", async (req, res) => {
+      const result = await usersCollection.find({}).toArray();
       res.json(result);
     });
   } finally {
