@@ -4,11 +4,23 @@ const cors = require("cors");
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
 const ObjectId = require("mongodb").ObjectId;
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 8000;
+const nodemailer = require("nodemailer");
+const sendgridTransport = require("nodemailer-sendgrid-transport");
+
+const transport = nodemailer.createTransport(
+  sendgridTransport({
+    auth: {
+      api_key: process.env.SENDGRID_API,
+    },
+  })
+);
 
 // middle wares
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // mongo Client
 const client = new MongoClient(process.env.URI);
@@ -104,6 +116,49 @@ async function run() {
     // get all user
     app.get("/users/register", async (req, res) => {
       const result = await usersCollection.find({}).toArray();
+      res.json(result);
+    });
+
+    // check if the user is exists or not
+    app.get("/forgotPassword", async (req, res) => {
+      // check is the users exists
+      const resetEmail = req.query.resetEmail;
+      const result = await usersCollection
+        .find({ email: resetEmail })
+        .toArray();
+      res.json(result);
+
+      /* if (result === []) {
+        res.json({ alert: "user not found please register" });
+      } else { */
+      /* transport.sendMail({
+          to: resetEmail,
+          from: "mr.zihad321@gmail.com",
+          subject: "password reset",
+          html: `
+            <p> You requested for password reset </p>
+            <h5> client in this link <a href="${resetEmail}/reset">Link</a> to reset password</h5>
+            `,
+        });
+      } */
+    });
+
+    // update user password
+    app.put("/resetPassword", async (req, res) => {
+      const user = req.body;
+      const filter = { email: user.email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          password: user.password,
+          confirmPassword: user.password,
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.json(result);
     });
   } finally {
