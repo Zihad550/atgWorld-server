@@ -85,9 +85,16 @@ async function run() {
       res.json(result);
     });
 
-    // get user
+    // get all user
     app.get("/user/register", async (req, res) => {
       const result = await usersCollection.find({}).toArray();
+      res.json(result);
+    });
+
+    // get a single user
+    app.get("/user/register", async (req, res) => {
+      const id = req.query.id;
+      const result = await usersCollection.findOne({ _id: ObjectId(id) });
       res.json(result);
     });
   } finally {
