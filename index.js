@@ -20,7 +20,6 @@ const transport = nodemailer.createTransport(
 // middle wares
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
 // mongo Client
 const client = new MongoClient(process.env.URI);
@@ -36,26 +35,43 @@ async function run() {
 
     // get all posts
     app.get("/posts", async (req, res) => {
+     try{
       const result = await postsCollection.find({}).toArray();
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({status: 'Failed', data: error})
+     }
     });
 
     // create new post
     app.post("/posts", async (req, res) => {
-      const post = req.body;
+      try{
+        const post = req.body;
       const result = await postsCollection.insertOne(post);
       res.json(result);
+      }catch(error){
+        res.status(400).json({status: 'Failed', data: error})
+      }
     });
 
     // delete a post
-    app.delete("/posts", async (req, res) => {
-      const id = req.query.id;
+    app.delete("/posts/:id", async (req, res) => {
+     try{
+       const id = req.params.id;
+      const isObj = ObjectId.isValid(id);
+      if(isObj) return res.status(400).json({message: 'invalid id'})
       const result = await postsCollection.deleteOne({ _id: ObjectId(id) });
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({error})
+     }
     });
 
     // give like
     app.put("/posts/like", async (req, res) => {
+     try{
       const post = req.body;
       const filter = { _id: ObjectId(post._id) };
       const options = { upsert: true };
@@ -66,11 +82,19 @@ async function run() {
         options
       );
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({
+        status: 'Failed',
+        data: error
+      })
+     }
     });
 
     // give comment
     app.put("/posts/comment", async (req, res) => {
-      const newPost = req.body;
+      try{
+        const newPost = req.body;
       const filter = { _id: ObjectId(newPost._id) };
       const options = { upsert: true };
       const updateDoc = {
@@ -88,40 +112,72 @@ async function run() {
         options
       );
       res.json(result);
+      }catch(error){
+        res.status(400).json({status: 'Failed', data: error})
+      }
     });
 
     // save user
     app.post("/user/register", async (req, res) => {
+     try{
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({status: 'Failed', data: error})
+     }
     });
 
     // get a single user
-    app.get("/user/register", async (req, res) => {
+    app.get("/user/register/:id", async (req, res) => {
+     try{
       const id = req.query.id;
+
+      if(ObjectId.isValid(id)) return res.status(400).json({message: 'invalid id'})
       const result = await usersCollection.findOne({ _id: ObjectId(id) });
 
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({message: "Failed to get user", error})
+     }
     });
 
     // check if the user is registered
     app.get("/user/login", async (req, res) => {
-      const email = req.query.email;
+      try{
+        const email = req.query.email;
       const password = req.query.password;
       const result = await usersCollection.findOne({ email, password });
       res.json(result);
+      }
+      catch(error){
+        res.status(400).json({
+          message: 'failed',
+          data: error
+        })
+      }
     });
 
     // get all user
     app.get("/users/register", async (req, res) => {
+     try{
       const result = await usersCollection.find({}).toArray();
       res.json(result);
+     }
+     catch(error){
+      res.status(400).json({
+        status: 'Failed',
+        data: error,
+      })
+     }
     });
 
     // check if the user is exists or not
     app.get("/forgotPassword", async (req, res) => {
-      // check is the users exists
+      try{
+        // check is the users exists
       const resetEmail = req.query.resetEmail;
       const result = await usersCollection
         .find({ email: resetEmail })
@@ -141,11 +197,19 @@ async function run() {
             `,
         });
       } */
+      }
+      catch(error){
+        res.status(400).json({
+          status: 'Failed',
+          data: error
+        })
+      }
     });
 
     // update user password
     app.put("/resetPassword", async (req, res) => {
-      const user = req.body;
+      try{
+        const user = req.body;
       const filter = { email: user.email };
       const options = { upsert: true };
       const updateDoc = {
@@ -160,6 +224,13 @@ async function run() {
         options
       );
       res.json(result);
+      }
+      catch(error){
+        res.status(400).json({
+          status: 'Failed',
+          data: error
+        })
+      }
     });
   } finally {
   }
